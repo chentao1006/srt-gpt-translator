@@ -1,5 +1,6 @@
 [option]
-#API key for OpenAI API
+#API URL and key for OpenAI API
+openai-url = https://api.openai.com/v1
 openai-apikey = sk-
 
 #Target language for translation, e.g. "English", "Chinese", "Japanese"

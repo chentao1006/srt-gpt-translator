@@ -33,10 +33,12 @@ with open('settings.cfg', encoding=encoding) as f:
     config.read_string(config_text)
 
 # 获取openai_apikey和language
+openai_url = config.get('option', 'openai-url')
 openai_apikey = config.get('option', 'openai-apikey')
 language_name = config.get('option', 'target-language')
 
 # 设置openai的API密钥
+openai.api_base = openai_url
 openai.api_key = openai_apikey
 import argparse
 
@@ -90,7 +92,7 @@ def split_text(text):
 def is_translation_valid(original_text, translated_text):
     def get_index_lines(text):
         lines = text.split('\n')
-        index_lines = [line for line in lines if re.match(r'^\d+$', line.strip())]
+        index_lines = [line.strip() for line in lines if re.match(r'^\d+$', line.strip())]
         return index_lines
 
     original_index_lines = get_index_lines(original_text)
@@ -107,7 +109,7 @@ def translate_text(text):
     while retries < max_retries:
         try:
             completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "user",
