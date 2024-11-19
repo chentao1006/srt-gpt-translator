@@ -95,13 +95,23 @@ def is_translation_valid(original_text, translated_text):
         index_lines = [line.strip() for line in lines if re.match(r'^\d+$', line.strip())]
         return index_lines
 
+    def get_subtitle_lines(text):
+        paras = re.split(r'(\n\s*\n)', text.strip())
+        # 判断每段是否至少三行
+        subtitle_lines = [para for para in paras if len(para.split('\n')) >= 3]
+        return subtitle_lines
+
     original_index_lines = get_index_lines(original_text)
     translated_index_lines = get_index_lines(translated_text)
+    lines_match = original_index_lines == translated_index_lines
+    
+    original_index_para = get_subtitle_lines(original_text)
+    translated_index_para = get_subtitle_lines(translated_text)
+    # 判断两个数组个数相等
+    paras_match = len(original_index_para) == len(translated_index_para)
 
-    print(original_text, original_index_lines)
-    print(translated_text, translated_index_lines)
+    return lines_match and paras_match
 
-    return original_index_lines == translated_index_lines
 def translate_text(text):
     max_retries = 3
     retries = 0
@@ -112,8 +122,12 @@ def translate_text(text):
                 model="gpt-4o-mini",
                 messages=[
                     {
+                        "role": "system",
+                        "content": f"Translate the following subtitle text into {language_name}, but keep the subtitle number and timeline unchanged. Keep the format and line breaks. Please pay attention to the context to make whole dialog consistent. Use natural language and avoid word-for-word translation.",
+                    },
+                    {
                         "role": "user",
-                        "content": f"Translate the following subtitle text into {language_name}, but keep the subtitle number and timeline unchanged: \n{text}",
+                        "content": text,
                     }
                 ],
             )
