@@ -33,10 +33,12 @@ with open('settings.cfg', encoding=encoding) as f:
     config.read_string(config_text)
 
 # 获取openai_apikey和language
+openai_url = config.get('option', 'openai-url')
 openai_apikey = config.get('option', 'openai-apikey')
 language_name = config.get('option', 'target-language')
 
 # 设置openai的API密钥
+openai.api_base = openai_url
 openai.api_key = openai_apikey
 import argparse
 
@@ -74,7 +76,7 @@ def split_text(text):
     # 遍历字幕块列表
     for block in blocks:
         # 如果当前短文本加上新的字幕块长度不大于1024，则将新的字幕块加入当前短文本
-        if len(short_text + block) <= 1024:
+        if len(short_text + block) <= 1440:
             short_text += block
         # 如果当前短文本加上新的字幕块长度大于1024，则将当前短文本加入短文本列表，并重置当前短文本为新的字幕块
         else:
@@ -90,28 +92,44 @@ def split_text(text):
 def is_translation_valid(original_text, translated_text):
     def get_index_lines(text):
         lines = text.split('\n')
-        index_lines = [line for line in lines if re.match(r'^\d+$', line.strip())]
+        index_lines = [line.strip() for line in lines if re.match(r'^\d+$', line.strip())]
         return index_lines
+
+    def get_subtitle_lines(text):
+        paras = re.split(r'(\n\s*\n)', text.strip())
+        # 判断每段是否至少三行
+        subtitle_lines = [para for para in paras if len(para.split('\n')) >= 3]
+        return subtitle_lines
 
     original_index_lines = get_index_lines(original_text)
     translated_index_lines = get_index_lines(translated_text)
+    lines_match = original_index_lines == translated_index_lines
+    print(translated_index_lines)
+    
+    original_index_para = get_subtitle_lines(original_text)
+    translated_index_para = get_subtitle_lines(translated_text)
+    # 判断两个数组个数相等
+    paras_match = len(original_index_para) == len(translated_index_para)
+    print(len(original_index_para), len(translated_index_para))
 
-    print(original_text, original_index_lines)
-    print(translated_text, translated_index_lines)
+    return lines_match and paras_match
 
-    return original_index_lines == translated_index_lines
 def translate_text(text):
-    max_retries = 3
+    max_retries = 10
     retries = 0
     
     while retries < max_retries:
         try:
             completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[
                     {
+                        "role": "system",
+                        "content": f"Translate the following subtitle text into {language_name}, but keep the subtitle number and timeline unchanged. Keep the format and line breaks. Please pay attention to the context to make whole dialog consistent. Use natural language and avoid word-for-word translation.",
+                    },
+                    {
                         "role": "user",
-                        "content": f"Translate the following subtitle text into {language_name}, but keep the subtitle number and timeline unchanged: \n{text}",
+                        "content": text,
                     }
                 ],
             )
@@ -189,7 +207,8 @@ translated_text = ""
 
 # 遍历短文本列表，依次翻译每个短文本
 for short_text in tqdm(short_text_list):
-    print((short_text))
+    # print((short_text))
+    print("Translating...")
     # 翻译当前短文本
     translated_short_text = translate_and_store(short_text)
     
@@ -234,8 +253,8 @@ def merge_text(text1, text2):
 
     for block1, block2 in zip(blocks1, blocks2):
         merged_lines.extend(block1[:2])  # Index and timestamp
-        merged_lines.extend(block1[2:])  # English content
         merged_lines.extend(block2[2:])  # Chinese content
+        merged_lines.extend(block1[2:])  # English content
         merged_lines.append('')  # Add an empty line
 
     return '\n'.join(merged_lines).strip()

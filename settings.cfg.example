@@ -1,6 +1,7 @@
 [option]
 #API key for OpenAI API
-openai-apikey = sk-
+openai-url = https://api.openai.com/v1
+openai-apikey = sk-123
 
 #Target language for translation, e.g. "English", "Chinese", "Japanese"
 target-language = Chinese
