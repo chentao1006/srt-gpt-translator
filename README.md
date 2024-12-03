@@ -2,7 +2,7 @@
 
 [En](https://github.com/chentao1006/subtitle-translator/blob/main/README.md) | [中文说明](https://github.com/chentao1006/subtitle-translator/blob/main/README-zh.md)
 
-This tool is designed to help users translate srt file into a different language using the OpenAI API (model="gpt-4o-mini"). Support bilingual subtitles output. Support .srt and .ass files.
+This tool is designed to help users translate srt file into a different language using the OpenAI API. Support bilingual subtitles output. Support .srt and .ass files.
 
 ## Features
 
