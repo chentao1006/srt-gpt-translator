@@ -119,6 +119,7 @@ else:
     exit()
 
 translated_lines = []
+bilingual_lines = []
 
 for line in tqdm(lines):
     if line.startswith("Dialogue:"):
@@ -128,25 +129,16 @@ for line in tqdm(lines):
         dialogue_parts[9] = translated_text
         translated_line = ",".join(dialogue_parts)
         translated_lines.append(translated_line)
-    else:
-        translated_lines.append(line)
-
-with open(new_filenametxt, "w", encoding="utf-8") as f:
-    f.writelines(translated_lines)
-
-bilingual_lines = []
-
-for line in tqdm(lines):
-    if line.startswith("Dialogue:"):
-        dialogue_parts = line.split(",", 9)
-        original_text = dialogue_parts[9]
-        translated_text = translate_and_store(original_text)
         bilingual_text = f"{translated_text}\\N{original_text}"
         dialogue_parts[9] = bilingual_text
         bilingual_line = ",".join(dialogue_parts)
         bilingual_lines.append(bilingual_line)
     else:
+        translated_lines.append(line)
         bilingual_lines.append(line)
+
+with open(new_filenametxt, "w", encoding="utf-8") as f:
+    f.writelines(translated_lines)
 
 with open(new_filenametxt2, "w", encoding="utf-8") as f:
     f.writelines(bilingual_lines)
